@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal da Equipe</title>
+<style>
+  :root {
+    --ink: #1b2430;
+    --paper: #f6f5f1;
+    --card: #ffffff;
+    --line: #dedad1;
+    --accent: #2e5c4d;
+    --accent-soft: #e4ece8;
+    --warn: #9c3b3b;
+    --muted: #6b7280;
+    --mono: 'Courier New', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+  }
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    background: var(--ink);
+    color: #fff;
+  }
+  .topbar .brand {
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-size: 15px;
+  }
+  .topbar .brand span { color: #9fd8bd; }
+  #logoutBtn {
+    background: #52586a;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    display: none;
+  }
+  #logoutBtn:hover { background: #656b7f; }
+
+  .wrap {
+    max-width: 480px;
+    margin: 60px auto;
+    padding: 0 20px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 32px;
+  }
+  .card h1 {
+    font-size: 20px;
+    margin: 0 0 4px;
+  }
+  .card p.sub {
+    color: var(--muted);
+    margin: 0 0 24px;
+    font-size: 13px;
+  }
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 4px;
+    margin-top: 14px;
+  }
+  input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-size: 14px;
+    background: #fff;
+  }
+  input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button.primary {
+    margin-top: 22px;
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 11px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  button.primary:hover { background: #244a3e; }
+  .switch {
+    margin-top: 16px;
+    font-size: 13px;
+    text-align: center;
+    color: var(--muted);
+  }
+  .switch a { color: var(--accent); cursor: pointer; text-decoration: underline; }
+  .error {
+    background: #fbeaea;
+    color: var(--warn);
+    border: 1px solid #eecccc;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-top: 14px;
+    display: none;
+  }
+  .ok {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid #c7ded4;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-top: 14px;
+    display: none;
+  }
+
+  /* Dashboard */
+  .dash {
+    max-width: 780px;
+    margin: 40px auto;
+    padding: 0 20px;
+    display: none;
+  }
+  .greeting h2 { margin: 0 0 2px; font-size: 22px; }
+  .greeting p { margin: 0; color: var(--muted); font-size: 13px; }
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-top: 20px;
+  }
+  .panel-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 10px 18px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; }
+  tr:last-child td { border-bottom: none; }
+  .tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .tag.out { background: #f0e7dc; color: #8a5a2b; }
+  .empty { padding: 24px 18px; color: var(--muted); font-size: 13px; }
+  footer.note {
+    max-width: 780px;
+    margin: 10px auto 40px;
+    padding: 0 20px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">PORTAL <span>DA EQUIPE</span></div>
+  <button id="logoutBtn">Log-out</button>
+</div>
+
+<!-- LOGIN -->
+<div class="wrap" id="loginView">
+  <div class="card">
+    <h1>Entrar</h1>
+    <p class="sub">Acesse com o usuário e a senha que você cadastrou.</p>
+    <div class="error" id="loginError"></div>
+    <label for="loginUser">Usuário</label>
+    <input id="loginUser" autocomplete="username">
+    <label for="loginPass">Senha</label>
+    <input id="loginPass" type="password" autocomplete="current-password">
+    <button class="primary" onclick="handleLogin()">Entrar</button>
+    <div class="switch">Ainda não tem conta? <a onclick="showView('signup')">Cadastre-se</a></div>
+  </div>
+</div>
+
+<!-- CADASTRO -->
+<div class="wrap" id="signupView" style="display:none">
+  <div class="card">
+    <h1>Criar conta</h1>
+    <p class="sub">Escolha seu próprio nome de usuário e senha.</p>
+    <div class="error" id="signupError"></div>
+    <div class="ok" id="signupOk"></div>
+    <label for="signupName">Nome completo</label>
+    <input id="signupName">
+    <label for="signupUser">Nome de usuário</label>
+    <input id="signupUser" autocomplete="username">
+    <label for="signupPass">Senha</label>
+    <input id="signupPass" type="password" autocomplete="new-password">
+    <button class="primary" onclick="handleSignup()">Criar conta</button>
+    <div class="switch">Já tem conta? <a onclick="showView('login')">Entrar</a></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dash" id="dashView">
+  <div class="greeting">
+    <h2 id="dashGreeting">Olá</h2>
+    <p id="dashSub">Sessão iniciada.</p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">Meu histórico de acesso</div>
+    <div id="myLogsBox"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">Log geral de acessos (todos os usuários)</div>
+    <div id="allLogsBox"></div>
+  </div>
+</div>
+
+<footer class="note">
+  Dados salvos localmente neste navegador. Cada pessoa deve criar sua própria conta e senha.
+</footer>
+
+<script>
+const USERS_KEY = 'pde_users';
+const LOGS_KEY = 'pde_logs';
+const SESSION_KEY = 'pde_session';
+
+function getUsers() {
+  return JSON.parse(localStorage.getItem(USERS_KEY) || '{}');
+}
+function saveUsers(u) {
+  localStorage.setItem(USERS_KEY, JSON.stringify(u));
+}
+function getLogs() {
+  return JSON.parse(localStorage.getItem(LOGS_KEY) || '[]');
+}
+function addLog(username, action) {
+  const logs = getLogs();
+  logs.unshift({
+    username,
+    action,
+    timestamp: new Date().toLocaleString('pt-BR')
+  });
+  localStorage.setItem(LOGS_KEY, JSON.stringify(logs));
+}
+
+// Hash simples de senha só para não guardar texto puro no localStorage.
+// (Não é criptografia forte — para produção real use um backend com hash seguro tipo bcrypt.)
+async function hashPass(pass) {
+  const enc = new TextEncoder().encode(pass);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function showView(view) {
+  document.getElementById('loginView').style.display = view === 'login' ? 'block' : 'none';
+  document.getElementById('signupView').style.display = view === 'signup' ? 'block' : 'none';
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('signupError').style.display = 'none';
+  document.getElementById('signupOk').style.display = 'none';
+}
+
+async function handleSignup() {
+  const name = document.getElementById('signupName').value.trim();
+  const user = document.getElementById('signupUser').value.trim().toLowerCase();
+  const pass = document.getElementById('signupPass').value;
+  const errBox = document.getElementById('signupError');
+  const okBox = document.getElementById('signupOk');
+  errBox.style.display = 'none';
+  okBox.style.display = 'none';
+
+  if (!name || !user || !pass) {
+    errBox.textContent = 'Preencha todos os campos.';
+    errBox.style.display = 'block';
+    return;
+  }
+  if (pass.length < 6) {
+    errBox.textContent = 'A senha precisa ter pelo menos 6 caracteres.';
+    errBox.style.display = 'block';
+    return;
+  }
+  const users = getUsers();
+  if (users[user]) {
+    errBox.textContent = 'Esse nome de usuário já existe.';
+    errBox.style.display = 'block';
+    return;
+  }
+  users[user] = { name, passHash: await hashPass(pass) };
+  saveUsers(users);
+  okBox.textContent = 'Conta criada! Você já pode entrar.';
+  okBox.style.display = 'block';
+  document.getElementById('signupName').value = '';
+  document.getElementById('signupUser').value = '';
+  document.getElementById('signupPass').value = '';
+}
+
+async function handleLogin() {
+  const user = document.getElementById('loginUser').value.trim().toLowerCase();
+  const pass = document.getElementById('loginPass').value;
+  const errBox = document.getElementById('loginError');
+  errBox.style.display = 'none';
+
+  const users = getUsers();
+  if (!users[user]) {
+    errBox.textContent = 'Usuário ou senha incorretos.';
+    errBox.style.display = 'block';
+    return;
+  }
+  const hash = await hashPass(pass);
+  if (users[user].passHash !== hash) {
+    errBox.textContent = 'Usuário ou senha incorretos.';
+    errBox.style.display = 'block';
+    return;
+  }
+  localStorage.setItem(SESSION_KEY, user);
+  addLog(user, 'login');
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  renderDashboard();
+}
+
+function handleLogout() {
+  const user = localStorage.getItem(SESSION_KEY);
+  if (user) addLog(user, 'logout');
+  localStorage.removeItem(SESSION_KEY);
+  document.getElementById('logoutBtn').style.display = 'none';
+  document.getElementById('dashView').style.display = 'none';
+  showView('login');
+}
+
+function renderLogTable(logs, containerId) {
+  const box = document.getElementById(containerId);
+  if (!logs.length) {
+    box.innerHTML = '<div class="empty">Nenhum registro ainda.</div>';
+    return;
+  }
+  let rows = logs.slice(0, 20).map(l => `
+    <tr>
+      <td>${l.username}</td>
+      <td><span class="tag ${l.action === 'logout' ? 'out' : ''}">${l.action}</span></td>
+      <td>${l.timestamp}</td>
+    </tr>
+  `).join('');
+  box.innerHTML = `<table><thead><tr><th>Usuário</th><th>Ação</th><th>Data/hora</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderDashboard() {
+  const user = localStorage.getItem(SESSION_KEY);
+  if (!user) return;
+  const users = getUsers();
+  const profile = users[user] || { name: user };
+
+  document.getElementById('loginView').style.display = 'none';
+  document.getElementById('signupView').style.display = 'none';
+  document.getElementById('dashView').style.display = 'block';
+  document.getElementById('logoutBtn').style.display = 'inline-block';
+
+  document.getElementById('dashGreeting').textContent = 'Olá, ' + profile.name;
+  document.getElementById('dashSub').textContent = 'Usuário: ' + user;
+
+  const allLogs = getLogs();
+  renderLogTable(allLogs.filter(l => l.username === user), 'myLogsBox');
+  renderLogTable(allLogs, 'allLogsBox');
+}
+
+document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+// Ao carregar: se já tem sessão salva, vai direto pro dashboard
+window.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem(SESSION_KEY)) {
+    renderDashboard();
+  }
+});
+</script>
+
+</body>
+</html>
