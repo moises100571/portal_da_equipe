@@ -163,6 +163,7 @@
     color: var(--accent);
   }
   .tag.out { background: #f0e7dc; color: #8a5a2b; }
+  .tag.signup { background: #e5e9f5; color: #3b4d8a; }
   .empty { padding: 24px 18px; color: var(--muted); font-size: 13px; }
   footer.note {
     max-width: 780px;
@@ -302,6 +303,7 @@ async function handleSignup() {
   }
   users[user] = { name, passHash: await hashPass(pass) };
   saveUsers(users);
+  addLog(user, 'cadastro');
   okBox.textContent = 'Conta criada! Você já pode entrar.';
   okBox.style.display = 'block';
   document.getElementById('signupName').value = '';
@@ -352,7 +354,7 @@ function renderLogTable(logs, containerId) {
   let rows = logs.slice(0, 20).map(l => `
     <tr>
       <td>${l.username}</td>
-      <td><span class="tag ${l.action === 'logout' ? 'out' : ''}">${l.action}</span></td>
+      <td><span class="tag ${l.action === 'logout' ? 'out' : (l.action === 'cadastro' ? 'signup' : '')}">${l.action}</span></td>
       <td>${l.timestamp}</td>
     </tr>
   `).join('');
