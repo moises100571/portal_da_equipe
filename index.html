@@ -38,6 +38,13 @@
     font-size: 15px;
   }
   .topbar .brand span { color: #9fd8bd; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+  }
   #logoutBtn {
     background: #52586a;
     color: #fff;
@@ -77,15 +84,16 @@
     margin-bottom: 4px;
     margin-top: 14px;
   }
-  input {
+  input, select {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid var(--line);
     border-radius: 4px;
     font-size: 14px;
     background: #fff;
+    font-family: inherit;
   }
-  input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
   button.primary {
     margin-top: 22px;
     width: 100%;
@@ -98,6 +106,18 @@
     cursor: pointer;
   }
   button.primary:hover { background: #244a3e; }
+  button.secondary {
+    margin-top: 10px;
+    width: 100%;
+    background: #fff;
+    color: var(--ink);
+    border: 1px solid var(--line);
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  button.secondary:hover { background: #f0efe9; }
   .switch {
     margin-top: 16px;
     font-size: 13px;
@@ -128,13 +148,30 @@
 
   /* Dashboard */
   .dash {
-    max-width: 780px;
+    max-width: 860px;
     margin: 40px auto;
     padding: 0 20px;
     display: none;
   }
+  .greeting { display: flex; align-items: center; gap: 14px; }
+  .greeting .avatar { width: 48px; height: 48px; font-size: 17px; }
   .greeting h2 { margin: 0 0 2px; font-size: 22px; }
   .greeting p { margin: 0; color: var(--muted); font-size: 13px; }
+  .tabs {
+    display: flex; gap: 4px;
+    margin-top: 26px;
+    border-bottom: 1px solid var(--line);
+  }
+  .tab-btn {
+    background: none; border: none; cursor: pointer;
+    padding: 10px 16px; font-size: 13px; color: var(--muted);
+    border-bottom: 2px solid transparent;
+    font-family: inherit;
+  }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
   .panel {
     background: var(--card);
     border: 1px solid var(--line);
@@ -149,7 +186,19 @@
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: 0.04em;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; flex-wrap: wrap;
   }
+  .filters {
+    display: flex; gap: 8px; padding: 12px 18px; flex-wrap: wrap;
+    border-bottom: 1px solid var(--line); background: #fbfaf7;
+  }
+  .filters input, .filters select { width: auto; min-width: 140px; padding: 7px 10px; font-size: 12px; }
+  .btn-small {
+    background: var(--ink); color: #fff; border: none;
+    padding: 7px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;
+  }
+  .btn-small:hover { background: #303c4d; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th, td { text-align: left; padding: 10px 18px; border-bottom: 1px solid var(--line); }
   th { color: var(--muted); font-weight: 600; font-size: 12px; }
@@ -164,9 +213,11 @@
   }
   .tag.out { background: #f0e7dc; color: #8a5a2b; }
   .tag.signup { background: #e5e9f5; color: #3b4d8a; }
+  .tag.senha { background: #f3e5f0; color: #8a3b6f; }
   .empty { padding: 24px 18px; color: var(--muted); font-size: 13px; }
+  .profile-row { max-width: 380px; }
   footer.note {
-    max-width: 780px;
+    max-width: 860px;
     margin: 10px auto 40px;
     padding: 0 20px;
     font-size: 12px;
@@ -178,7 +229,10 @@
 
 <div class="topbar">
   <div class="brand">PORTAL <span>DA EQUIPE</span></div>
-  <button id="logoutBtn">Log-out</button>
+  <div class="topbar-right">
+    <div class="avatar" id="topAvatar" style="display:none"></div>
+    <button id="logoutBtn">Log-out</button>
+  </div>
 </div>
 
 <!-- LOGIN -->
@@ -217,18 +271,82 @@
 <!-- DASHBOARD -->
 <div class="dash" id="dashView">
   <div class="greeting">
-    <h2 id="dashGreeting">Olá</h2>
-    <p id="dashSub">Sessão iniciada.</p>
+    <div class="avatar" id="dashAvatar"></div>
+    <div>
+      <h2 id="dashGreeting">Olá</h2>
+      <p id="dashSub">Sessão iniciada.</p>
+    </div>
   </div>
 
-  <div class="panel">
-    <div class="panel-head">Meu histórico de acesso</div>
-    <div id="myLogsBox"></div>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="logs" onclick="switchTab('logs')">Logs de acesso</button>
+    <button class="tab-btn" data-tab="perfil" onclick="switchTab('perfil')">Meu perfil</button>
   </div>
 
-  <div class="panel">
-    <div class="panel-head">Log geral de acessos (todos os usuários)</div>
-    <div id="allLogsBox"></div>
+  <!-- TAB LOGS -->
+  <div class="tab-panel active" id="tab-logs">
+    <div class="panel">
+      <div class="panel-head">
+        <span>Meu histórico de acesso</span>
+        <button class="btn-small" onclick="exportCSV('mine')">Exportar CSV</button>
+      </div>
+      <div id="myLogsBox"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <span>Log geral de acessos (todos os usuários)</span>
+        <button class="btn-small" onclick="exportCSV('all')">Exportar CSV</button>
+      </div>
+      <div class="filters">
+        <select id="filterUser" onchange="renderAllLogs()">
+          <option value="">Todos os usuários</option>
+        </select>
+        <select id="filterAction" onchange="renderAllLogs()">
+          <option value="">Todas as ações</option>
+          <option value="cadastro">Cadastro</option>
+          <option value="login">Login</option>
+          <option value="logout">Logout</option>
+          <option value="troca de senha">Troca de senha</option>
+        </select>
+        <input type="date" id="filterDate" onchange="renderAllLogs()">
+        <button class="btn-small" onclick="clearFilters()">Limpar filtros</button>
+      </div>
+      <div id="allLogsBox"></div>
+    </div>
+  </div>
+
+  <!-- TAB PERFIL -->
+  <div class="tab-panel" id="tab-perfil">
+    <div class="panel">
+      <div class="panel-head">Editar perfil</div>
+      <div style="padding:18px;">
+        <div class="profile-row">
+          <div class="error" id="profileError"></div>
+          <div class="ok" id="profileOk"></div>
+          <label for="profileName">Nome completo</label>
+          <input id="profileName">
+          <button class="primary" onclick="saveProfileName()">Salvar nome</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">Trocar senha</div>
+      <div style="padding:18px;">
+        <div class="profile-row">
+          <div class="error" id="passError"></div>
+          <div class="ok" id="passOk"></div>
+          <label for="currentPass">Senha atual</label>
+          <input id="currentPass" type="password">
+          <label for="newPass">Nova senha</label>
+          <input id="newPass" type="password">
+          <label for="newPass2">Confirmar nova senha</label>
+          <input id="newPass2" type="password">
+          <button class="primary" onclick="changePassword()">Atualizar senha</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -240,6 +358,7 @@
 const USERS_KEY = 'pde_users';
 const LOGS_KEY = 'pde_logs';
 const SESSION_KEY = 'pde_session';
+const AVATAR_COLORS = ['#2e5c4d','#3b4d8a','#8a3b6f','#8a5a2b','#3b7a8a','#6b4d8a','#4d7a3b'];
 
 function getUsers() {
   return JSON.parse(localStorage.getItem(USERS_KEY) || '{}');
@@ -252,12 +371,25 @@ function getLogs() {
 }
 function addLog(username, action) {
   const logs = getLogs();
+  const now = new Date();
   logs.unshift({
     username,
     action,
-    timestamp: new Date().toLocaleString('pt-BR')
+    timestamp: now.toLocaleString('pt-BR'),
+    iso: now.toISOString()
   });
   localStorage.setItem(LOGS_KEY, JSON.stringify(logs));
+}
+
+function avatarColor(username) {
+  let sum = 0;
+  for (let i = 0; i < username.length; i++) sum += username.charCodeAt(i);
+  return AVATAR_COLORS[sum % AVATAR_COLORS.length];
+}
+function initials(name) {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 // Hash simples de senha só para não guardar texto puro no localStorage.
@@ -274,6 +406,12 @@ function showView(view) {
   document.getElementById('loginError').style.display = 'none';
   document.getElementById('signupError').style.display = 'none';
   document.getElementById('signupOk').style.display = 'none';
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
 }
 
 async function handleSignup() {
@@ -341,6 +479,7 @@ function handleLogout() {
   if (user) addLog(user, 'logout');
   localStorage.removeItem(SESSION_KEY);
   document.getElementById('logoutBtn').style.display = 'none';
+  document.getElementById('topAvatar').style.display = 'none';
   document.getElementById('dashView').style.display = 'none';
   showView('login');
 }
@@ -348,17 +487,127 @@ function handleLogout() {
 function renderLogTable(logs, containerId) {
   const box = document.getElementById(containerId);
   if (!logs.length) {
-    box.innerHTML = '<div class="empty">Nenhum registro ainda.</div>';
+    box.innerHTML = '<div class="empty">Nenhum registro encontrado.</div>';
     return;
   }
-  let rows = logs.slice(0, 20).map(l => `
+  const tagClass = a => a === 'logout' ? 'out' : a === 'cadastro' ? 'signup' : a === 'troca de senha' ? 'senha' : '';
+  let rows = logs.slice(0, 100).map(l => `
     <tr>
       <td>${l.username}</td>
-      <td><span class="tag ${l.action === 'logout' ? 'out' : (l.action === 'cadastro' ? 'signup' : '')}">${l.action}</span></td>
+      <td><span class="tag ${tagClass(l.action)}">${l.action}</span></td>
       <td>${l.timestamp}</td>
     </tr>
   `).join('');
   box.innerHTML = `<table><thead><tr><th>Usuário</th><th>Ação</th><th>Data/hora</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function populateUserFilter() {
+  const sel = document.getElementById('filterUser');
+  const users = Object.keys(getUsers());
+  sel.innerHTML = '<option value="">Todos os usuários</option>' +
+    users.map(u => `<option value="${u}">${u}</option>`).join('');
+}
+
+function renderAllLogs() {
+  const logs = getLogs();
+  const fUser = document.getElementById('filterUser').value;
+  const fAction = document.getElementById('filterAction').value;
+  const fDate = document.getElementById('filterDate').value; // yyyy-mm-dd
+
+  const filtered = logs.filter(l => {
+    if (fUser && l.username !== fUser) return false;
+    if (fAction && l.action !== fAction) return false;
+    if (fDate) {
+      const logDate = (l.iso || '').slice(0, 10);
+      if (logDate !== fDate) return false;
+    }
+    return true;
+  });
+  renderLogTable(filtered, 'allLogsBox');
+}
+
+function clearFilters() {
+  document.getElementById('filterUser').value = '';
+  document.getElementById('filterAction').value = '';
+  document.getElementById('filterDate').value = '';
+  renderAllLogs();
+}
+
+function exportCSV(scope) {
+  const user = localStorage.getItem(SESSION_KEY);
+  let logs = getLogs();
+  if (scope === 'mine') logs = logs.filter(l => l.username === user);
+  if (!logs.length) { alert('Não há registros para exportar.'); return; }
+
+  const header = 'Usuario,Acao,DataHora\n';
+  const rows = logs.map(l => `${l.username},${l.action},"${l.timestamp}"`).join('\n');
+  const csv = header + rows;
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (scope === 'mine' ? `meus_logs_${user}` : 'logs_gerais') + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function saveProfileName() {
+  const user = localStorage.getItem(SESSION_KEY);
+  const users = getUsers();
+  const newName = document.getElementById('profileName').value.trim();
+  const errBox = document.getElementById('profileError');
+  const okBox = document.getElementById('profileOk');
+  errBox.style.display = 'none';
+  okBox.style.display = 'none';
+
+  if (!newName) {
+    errBox.textContent = 'O nome não pode ficar vazio.';
+    errBox.style.display = 'block';
+    return;
+  }
+  users[user].name = newName;
+  saveUsers(users);
+  okBox.textContent = 'Nome atualizado.';
+  okBox.style.display = 'block';
+  renderDashboard();
+}
+
+async function changePassword() {
+  const user = localStorage.getItem(SESSION_KEY);
+  const users = getUsers();
+  const current = document.getElementById('currentPass').value;
+  const next = document.getElementById('newPass').value;
+  const next2 = document.getElementById('newPass2').value;
+  const errBox = document.getElementById('passError');
+  const okBox = document.getElementById('passOk');
+  errBox.style.display = 'none';
+  okBox.style.display = 'none';
+
+  const currentHash = await hashPass(current);
+  if (users[user].passHash !== currentHash) {
+    errBox.textContent = 'Senha atual incorreta.';
+    errBox.style.display = 'block';
+    return;
+  }
+  if (next.length < 6) {
+    errBox.textContent = 'A nova senha precisa ter pelo menos 6 caracteres.';
+    errBox.style.display = 'block';
+    return;
+  }
+  if (next !== next2) {
+    errBox.textContent = 'As senhas não coincidem.';
+    errBox.style.display = 'block';
+    return;
+  }
+  users[user].passHash = await hashPass(next);
+  saveUsers(users);
+  addLog(user, 'troca de senha');
+  okBox.textContent = 'Senha atualizada com sucesso.';
+  okBox.style.display = 'block';
+  document.getElementById('currentPass').value = '';
+  document.getElementById('newPass').value = '';
+  document.getElementById('newPass2').value = '';
+  renderAllLogs();
 }
 
 function renderDashboard() {
@@ -372,12 +621,25 @@ function renderDashboard() {
   document.getElementById('dashView').style.display = 'block';
   document.getElementById('logoutBtn').style.display = 'inline-block';
 
+  const color = avatarColor(user);
+  const initialsText = initials(profile.name);
+  const topAv = document.getElementById('topAvatar');
+  topAv.style.display = 'flex';
+  topAv.style.background = color;
+  topAv.textContent = initialsText;
+
+  const dashAv = document.getElementById('dashAvatar');
+  dashAv.style.background = color;
+  dashAv.textContent = initialsText;
+
   document.getElementById('dashGreeting').textContent = 'Olá, ' + profile.name;
   document.getElementById('dashSub').textContent = 'Usuário: ' + user;
+  document.getElementById('profileName').value = profile.name;
 
   const allLogs = getLogs();
   renderLogTable(allLogs.filter(l => l.username === user), 'myLogsBox');
-  renderLogTable(allLogs, 'allLogsBox');
+  populateUserFilter();
+  renderAllLogs();
 }
 
 document.getElementById('logoutBtn').addEventListener('click', handleLogout);
